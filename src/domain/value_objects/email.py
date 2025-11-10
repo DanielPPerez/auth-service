@@ -1,13 +1,11 @@
 import re
-from pydantic import  validator
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, validator
 
-class Email(BaseSettings):
+class Email(BaseModel):
     value: str
 
     @validator('value')
     def email_must_be_valid(cls, v):
-        # Expresión regular simple para validar email
         regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(regex, v):
             raise ValueError('Formato de email inválido')

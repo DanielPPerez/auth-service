@@ -1,66 +1,55 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 import uuid
 from sqlalchemy.orm import Session
-# Importaciones de Casos de Uso
 from src.use_cases.register_user import RegisterUserUseCase
 from src.use_cases.login_user import LoginUserUseCase
 from src.use_cases.get_user import GetUserUseCase
 from src.use_cases.update_user import UpdateUserUseCase
 from src.use_cases.delete_user import DeleteUserUseCase
-# Importaciones de DTOs
 from src.use_cases.dtos import (
     RegisterUserRequestDTO, UserResponseDTO, LoginRequestDTO, LoginResponseDTO,
     UserDetailResponseDTO, UpdateUserRequestDTO
 )
-# Importación del Repositorio
-from src.adapters.repositories.user_repository import InMemoryUserRepository
 from src.adapters.repositories.mysql_user_repository import MySQLUserRepository
 from src.adapters.repositories.database import get_db
 
-# --- Creación del Router ---
-router = APIRouter(
-    tags=["Usuarios y Autenticación"] 
-)
+router = APIRouter(tags=["Usuarios y Autenticación"])
 
-
-# --- Inyección de Dependencias ---
 
 def get_user_repository(db: Session = Depends(get_db)) -> MySQLUserRepository:
     return MySQLUserRepository(db=db)
 
-# Actualiza las funciones "get_use_case" para que dependan del repositorio
+
 def get_register_user_use_case(
     repo: MySQLUserRepository = Depends(get_user_repository)
 ) -> RegisterUserUseCase:
     return RegisterUserUseCase(user_repository=repo)
+
 
 def get_login_user_use_case(
     repo: MySQLUserRepository = Depends(get_user_repository)
 ) -> LoginUserUseCase:
     return LoginUserUseCase(user_repository=repo)
 
+
 def get_update_user_use_case(
     repo: MySQLUserRepository = Depends(get_user_repository)
-    ) -> UpdateUserUseCase:
+) -> UpdateUserUseCase:
     return UpdateUserUseCase(user_repository=repo)
 
-def get_delete_user_use_case(repo: MySQLUserRepository = Depends(get_user_repository)
-    ) -> DeleteUserUseCase:
+
+def get_delete_user_use_case(
+    repo: MySQLUserRepository = Depends(get_user_repository)
+) -> DeleteUserUseCase:
     return DeleteUserUseCase(user_repository=repo)
+
 
 def get_user_use_case(
     repo: MySQLUserRepository = Depends(get_user_repository)
 ) -> GetUserUseCase:
     return GetUserUseCase(user_repository=repo)
 
-def get_db_user_repository() -> InMemoryUserRepository:
-    return InMemoryUserRepository()
 
-
-# --- Definición de Endpoints ---
-# Nota que ahora usamos `@router.post`, `@router.get`, etc., en lugar de `@app.*`
-
-# Línea correcta
 @router.post("/register", response_model=UserResponseDTO, status_code=status.HTTP_201_CREATED)
 def register_user(
     request: RegisterUserRequestDTO, 
@@ -122,6 +111,6 @@ def delete_user(
 ):
     try:
         use_case.execute(user_id)
-        return # FastAPI manejará la respuesta 204
+        return
     except FileNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

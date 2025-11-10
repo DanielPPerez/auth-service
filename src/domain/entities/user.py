@@ -1,13 +1,12 @@
 import uuid
 import datetime
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import BaseModel, Field
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.password import Password
 from src.domain.entities.profile import Profile
 from src.domain.value_objects.enums import Entorno, NivelEducativo
 
-class User(BaseSettings):
+class User(BaseModel):
     user_id: uuid.UUID = Field(default_factory=uuid.uuid4)
     username: str
     age: int
@@ -18,12 +17,11 @@ class User(BaseSettings):
 
     class Config:
         arbitrary_types_allowed = True
-        validate_assignment = True # Importante para que las actualizaciones validen
+        validate_assignment = True
 
     def update_details(self, username: str = None, age: int = None):
         """Actualiza los detalles básicos del usuario."""
         if username:
-            # Aquí podrías añadir validaciones de negocio, ej:
             if len(username) < 3:
                 raise ValueError("El nombre de usuario debe tener al menos 3 caracteres.")
             self.username = username

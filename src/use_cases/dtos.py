@@ -1,9 +1,8 @@
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import BaseModel, Field
 from typing import Optional
 from src.domain.value_objects.enums import Entorno, NivelEducativo, Rol
 
-class RegisterUserRequestDTO(BaseSettings):
+class RegisterUserRequestDTO(BaseModel):
     username: str
     email: str
     password: str
@@ -11,37 +10,40 @@ class RegisterUserRequestDTO(BaseSettings):
     entorno: Entorno
     nivel_educativo: NivelEducativo
 
-class UserResponseDTO(BaseSettings):
+
+class UserResponseDTO(BaseModel):
     user_id: str
     username: str
     email: str
     message: str
-    
-# --- DTOs para Respuestas ---
-class ProfileResponseDTO(BaseSettings):
+
+
+class ProfileResponseDTO(BaseModel):
     rol: Rol
     entorno: Entorno
     nivel_educativo: NivelEducativo
 
-class UserDetailResponseDTO(BaseSettings): # DTO más completo para respuestas
+
+class UserDetailResponseDTO(BaseModel):
     user_id: str
     username: str
     email: str
     age: int
     profile: ProfileResponseDTO
 
-# --- DTOs para Login ---
-class LoginRequestDTO(BaseSettings):
+
+class LoginRequestDTO(BaseModel):
     email: str
     password: str
 
-class LoginResponseDTO(BaseSettings):
+
+class LoginResponseDTO(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-# --- DTOs para Update ---
-class UpdateUserRequestDTO(BaseSettings):
+
+class UpdateUserRequestDTO(BaseModel):
     username: Optional[str] = Field(None, min_length=3)
-    age: Optional[int] = Field(None, gt=17) # gt = greater than
+    age: Optional[int] = Field(None, gt=17)
     entorno: Optional[Entorno] = None
     nivel_educativo: Optional[NivelEducativo] = None
