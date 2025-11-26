@@ -1,5 +1,6 @@
 import uuid
 import datetime
+from typing import Optional
 from pydantic import Field
 from pydantic_settings import BaseSettings
 from src.domain.value_objects.email import Email
@@ -13,7 +14,7 @@ class User(BaseSettings):
     age: int
     email: Email
     password: Password
-    profile: Profile = None 
+    profile: Optional[Profile] = None 
     created_at: datetime.datetime = Field(default_factory=datetime.datetime.utcnow)
 
     class Config:

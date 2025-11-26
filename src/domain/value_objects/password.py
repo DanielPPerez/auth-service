@@ -2,15 +2,12 @@ import math
 import time
 import re
 import pandas as pd
-from passlib.context import CryptContext
+import bcrypt
 from pydantic import  validator
 from pydantic_settings import BaseSettings
-from typing import Set
+from typing import Set, Optional
 
 # --- Configuración Inicial---
-
-# 1. Configurar el contexto de hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # 2. Cargar y limpiar el diccionario de contraseñas predecibles
 COMMON_PASSWORDS: Set[str] = set()
@@ -26,10 +23,10 @@ except Exception as e:
 
 class Password(BaseSettings):
     value: str # La contraseña en texto plano, solo existirá momentáneamente
-    hashed_value: str = None
-    strength: str = None
-    crack_time_seconds: float = None
-    entropy: float = None
+    hashed_value: Optional[str] = None
+    strength: Optional[str] = None
+    crack_time_seconds: Optional[float] = None
+    entropy: Optional[float] = None
 
     class Config:
         validate_assignment = True # Permite revalidar al asignar un valor
@@ -74,8 +71,57 @@ class Password(BaseSettings):
 
     @staticmethod
     def _hash_password(plain_password: str) -> str:
-        return pwd_context.hash(plain_password)
+        """
+        Hashea una contraseña usando bcrypt.
+        Bcrypt tiene un límite de 72 bytes, por lo que truncamos si es necesario.
+        """
+        # Convertir a bytes y truncar a 72 bytes si es necesario
+        password_bytes = plain_password.encode('utf-8')
+        if len(password_bytes) > 72:
+            # Truncar a 72 bytes de manera segura
+            password_bytes = password_bytes[:72]
+            # Decodificar de vuelta a string, manejando posibles caracteres cortados
+            try:
+                plain_password = password_bytes.decode('utf-8')
+            except UnicodeDecodeError:
+                # Si hay un error de decodificación, truncar un byte más y volver a intentar
+                plain_password = password_bytes[:-1].decode('utf-8', errors='ignore')
+            password_bytes = plain_password.encode('utf-8')
+        
+        # Hashear usando bcrypt directamente
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password_bytes, salt)
+        return hashed.decode('utf-8')
+
+    @classmethod
+    def from_hash(cls, hashed_value: str) -> 'Password':
+        """
+        Crea un objeto Password desde un hash existente (útil al leer de la BD).
+        No valida la contraseña original ni calcula métricas.
+        """
+        # Usar model_construct para crear instancia sin validación
+        return cls.model_construct(
+            value="",  # No tenemos el texto plano
+            hashed_value=hashed_value,
+            strength="N/A",  # Valor por defecto
+            crack_time_seconds=0.0,  # Valor por defecto
+            entropy=0.0  # Valor por defecto
+        )
 
     def verify_password(self, plain_password: str) -> bool:
-        """Verifica una contraseña en texto plano contra el hash almacenado."""
-        return pwd_context.verify(plain_password, self.hashed_value)
+        """
+        Verifica una contraseña en texto plano contra el hash almacenado.
+        Trunca la contraseña a 72 bytes para coincidir con el límite de bcrypt.
+        """
+        # Truncar la contraseña a 72 bytes si es necesario (igual que al hashear)
+        password_bytes = plain_password.encode('utf-8')
+        if len(password_bytes) > 72:
+            password_bytes = password_bytes[:72]
+            try:
+                plain_password = password_bytes.decode('utf-8')
+            except UnicodeDecodeError:
+                plain_password = password_bytes[:-1].decode('utf-8', errors='ignore')
+            password_bytes = plain_password.encode('utf-8')
+        
+        # Verificar usando bcrypt directamente
+        return bcrypt.checkpw(password_bytes, self.hashed_value.encode('utf-8'))
