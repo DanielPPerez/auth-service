@@ -1,0 +1,9 @@
+{
+  "username": "usuario_prueba",
+  "email": "prueba@example.com",
+  "password": "MiPassword123!",
+  "age": 25,
+  "entorno": "casa",
+  "nivel_educativo": "secundaria"
+}
+

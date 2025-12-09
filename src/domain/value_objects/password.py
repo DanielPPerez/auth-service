@@ -37,9 +37,37 @@ class Password(BaseSettings):
         self.hashed_value = self._hash_password(self.value)
 
     def _validate_and_process(self, plain_password: str):
-        # Validación de diccionario
+        """
+        Valida y procesa una contraseña según los estándares de seguridad:
+        - Sanitización: trim de espacios
+        - Longitud mínima: 8 caracteres
+        - Longitud máxima: 128 caracteres
+        - Validación de caracteres de control
+        - Validación contra diccionario de contraseñas comunes
+        - Cálculo de entropía y fuerza
+        """
+        # Sanitización: trim de espacios
+        if isinstance(plain_password, str):
+            plain_password = plain_password.strip()
+        else:
+            plain_password = str(plain_password).strip()
+        
+        # Validación de longitud mínima
+        if len(plain_password) < 8:
+            raise ValueError("La contraseña debe tener al menos 8 caracteres")
+        
+        # Validación de longitud máxima
+        if len(plain_password) > 128:
+            raise ValueError("La contraseña no puede tener más de 128 caracteres")
+        
+        # Validación de caracteres de control (ASCII 0-31 y 127)
+        # Permite caracteres imprimibles pero rechaza caracteres de control
+        if any(ord(c) < 32 or ord(c) == 127 for c in plain_password):
+            raise ValueError("La contraseña no puede contener caracteres de control")
+        
+        # Validación de diccionario (contraseñas comunes)
         if plain_password in COMMON_PASSWORDS:
-            raise ValueError("La contraseña es demasiado común.")
+            raise ValueError("La contraseña es demasiado común y no es segura")
 
         # Cálculo de entropía
         pool_size = self._get_character_pool_size(plain_password)

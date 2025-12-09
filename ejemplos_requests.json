@@ -1,0 +1,65 @@
+{
+  "ejemplo_registro": {
+    "url": "http://localhost:8001/register",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "username": "usuario_prueba",
+      "email": "prueba@example.com",
+      "password": "MiPassword123!",
+      "age": 25,
+      "entorno": "casa",
+      "nivel_educativo": "secundaria"
+    },
+    "notas": {
+      "entorno_valores_permitidos": [
+        "casa",
+        "primaria",
+        "secundaria",
+        "preescolar",
+        "preparatoria",
+        "centro_rehabilitacion"
+      ],
+      "nivel_educativo_valores_permitidos": [
+        "ninguno",
+        "analfabeta",
+        "educacion_inicial",
+        "preescolar",
+        "primaria",
+        "secundaria",
+        "bachillerato_general",
+        "bachillerato_tecnico",
+        "bachillerato_profesional",
+        "licenciatura",
+        "especialidad",
+        "maestria",
+        "doctorado",
+        "tecnico_superior_universitario",
+        "profesional_asociado",
+        "educacion_normal",
+        "alfabetizacion_adultos",
+        "primaria_adultos",
+        "secundaria_adultos"
+      ]
+    }
+  },
+  "ejemplo_login": {
+    "url": "http://localhost:8001/login",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "email": "prueba@example.com",
+      "password": "MiPassword123!"
+    },
+    "respuesta_esperada": {
+      "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+      "token_type": "bearer"
+    },
+    "notas": "El access_token se debe usar en el header Authorization como: 'Bearer {access_token}'"
+  }
+}
+

@@ -1,8 +1,11 @@
 # src/adapters/api/main.py
 from fastapi import FastAPI
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from src.adapters.api import user_routes
 from src.adapters.repositories.database import engine, Base
 from src.adapters.repositories import db_models
+from src.adapters.api.rate_limiter import limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 # --- Función para crear tablas ---
 def create_db_and_tables():
@@ -15,6 +18,17 @@ app = FastAPI(
     title="Servicio de Autenticación - Scriptoria AI",
     description="Microservicio para gestionar usuarios y autenticación.",
     version="1.0.0"
+)
+
+# Configurar rate limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Middleware de seguridad (MSTG-NETWORK-1)
+# Solo acepta requests del API Gateway o hosts confiables
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["api.scriptoria.com", "localhost", "auth-service", "127.0.0.1"]
 )
 
 @app.on_event("startup")

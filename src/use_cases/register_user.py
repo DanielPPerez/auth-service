@@ -4,6 +4,7 @@ from src.domain.entities.user import User
 from src.domain.entities.profile import Profile
 from src.domain.value_objects.email import Email
 from src.domain.value_objects.password import Password
+from src.domain.value_objects.username import Username
 from .dtos import RegisterUserRequestDTO, UserResponseDTO
 
 class RegisterUserUseCase:
@@ -11,17 +12,25 @@ class RegisterUserUseCase:
         self.user_repository = user_repository
 
     def execute(self, request: RegisterUserRequestDTO) -> UserResponseDTO:
+        """
+        Registra un nuevo usuario con validaciones completas de seguridad.
+        Valida que el email y username no existan, crea los Value Objects
+        con validaciones robustas, y persiste el usuario.
+        """
         # 1. Validar que el usuario o email no existan
         if self.user_repository.find_by_email(request.email):
             raise ValueError("El email ya está en uso.")
         if self.user_repository.find_by_username(request.username):
             raise ValueError("El nombre de usuario ya está en uso.")
 
-        # 2. Crear los objetos de valor y entidades
+        # 2. Crear los objetos de valor con validaciones robustas
+        # Estos Value Objects validan formato, longitud, caracteres peligrosos, etc.
         try:
             email_vo = Email(value=request.email)
             password_vo = Password(value=request.password)
+            username_vo = Username(value=request.username)
         except ValueError as e:
+            # Propagar errores de validación del Value Object
             raise e
 
         # 3. Crear el agregado completo
@@ -36,7 +45,7 @@ class RegisterUserUseCase:
         
         user_entity = User(
             user_id=temp_user_id,
-            username=request.username,
+            username=username_vo.value,  # Usar el valor validado del Value Object
             age=request.age,
             email=email_vo,
             password=password_vo,
